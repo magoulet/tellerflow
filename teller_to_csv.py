@@ -32,14 +32,13 @@ for institution in config["accounts"]:
         os.makedirs("exports", exist_ok=True)
         with open(csv_path, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(["Date", "Description", "Amount", "Category", "Counterparty", "Status"])
+            writer.writerow(["Date", "Description", "Amount", "Category", "Status"])
             for txn in transactions:
                 writer.writerow([
                     txn["date"],
                     txn["description"],
                     txn["amount"],
                     txn["details"].get("category", ""),
-                    # txn["details"]["counterparty"].get("name", ""),
                     txn["status"]
                 ])
 
