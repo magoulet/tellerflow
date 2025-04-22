@@ -11,6 +11,14 @@ with open("config/accounts.yaml", "r") as f:
 
 # Fetch transactions for all accounts
 for institution in config["accounts"]:
+
+    cutoff_date = None
+    if "cutoff_date" in institution:
+        try:
+            cutoff_date = datetime.strptime(institution["cutoff_date"], "%Y-%m-%d").date()
+        except ValueError:
+            print(f"Warning: Invalid cutoff date '{institution['cutoff_date']}'. Skipping filter.", file=sys.stderr)
+
     for account in institution["accounts"]:
         # Fetch transactions
         response = requests.get(
@@ -24,6 +32,15 @@ for institution in config["accounts"]:
         if not transactions:
             continue
 
+        # Filter by cutoff date
+        if cutoff_date:
+            filtered_transactions = [
+                txn for txn in transactions
+                if datetime.strptime(txn["date"], "%Y-%m-%d").date() >= cutoff_date
+            ]
+        else:
+            filtered_transactions = transactions
+
         # Define CSV filename (e.g., "Chase_credit_card_20240520.csv")
         csv_name = f"{institution['institution']}_{account['type']}_{datetime.now().strftime('%Y%m%d')}.csv"
         csv_path = os.path.join("exports", csv_name)
@@ -33,7 +50,7 @@ for institution in config["accounts"]:
         with open(csv_path, "w", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(["Date", "Description", "Amount", "Category", "Status"])
-            for txn in transactions:
+            for txn in filtered_transactions:
                 writer.writerow([
                     txn["date"],
                     txn["description"],
@@ -42,4 +59,4 @@ for institution in config["accounts"]:
                     txn["status"]
                 ])
 
-        print(f"Generated: {csv_path}")
+        print(f"Generated: {csv_path} (Filtered: {len(transactions) - len(filtered_transactions)} transactions excluded)")
