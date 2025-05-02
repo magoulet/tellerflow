@@ -1,5 +1,6 @@
 import csv
 import os
+import sys
 from datetime import datetime
 
 import requests
@@ -40,6 +41,12 @@ for institution in config["accounts"]:
             ]
         else:
             filtered_transactions = transactions
+
+        # Filter by status
+        filtered_transactions = [
+            txn for txn in filtered_transactions
+            if txn["status"] == "posted"
+        ]
 
         # Define CSV filename (e.g., "Chase_credit_card_20240520.csv")
         csv_name = f"{institution['institution']}_{account['type']}_{datetime.now().strftime('%Y%m%d')}.csv"
